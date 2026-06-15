@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shreya & Nik · Sydney 2022–2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400;1,600&family=Caveat:wght@400;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+/* ── PALETTE (lighter, warmer) ──
+   Map tab:     warm sand #F2E8D5 + teal #2D7A6E
+   Trips tab:   dusty rose #C9636B bg + cream #FAF5EC text
+   Picks tab:   cream #FAF5EC + pink #D4607A
+   Letters tab: warm charcoal #2C3830 + mustard #E8A030
+*/
+:root{
+  --cream:#FAF5EC; --sand:#F2E8D5; --sand2:#E8DCCA;
+  --teal:#2D7A6E; --teal-light:#4A9E92;
+  --rust:#D4522A; --rose:#C9636B; --pink:#D4607A;
+  --mustard:#E8A030; --ink:#2C3830; --muted:#8A9490;
+  --card:#FFFCF5;
+  /* chapter */
+  --c1:#D4522A; --c2:#2D7A6E; --c3:#E8A030; --c4:#D4607A;
+  /* tab themes */
+  --t1-bg:#EEE6D2; --t1-nav:#2D7A6E; --t1-acc:#D4522A;
+  --t2-bg:#C9636B; --t2-nav:#A84D54; --t2-acc:#FAF5EC;
+  --t3-bg:#FAF5EC; --t3-nav:#F2E8D5; --t3-acc:#D4607A;
+  --t4-bg:#2C3830; --t4-nav:#1E2820; --t4-acc:#E8A030;
+}
+
+html,body{height:100%;color:var(--ink);font-family:'DM Sans',sans-serif;overflow:hidden;background:var(--t1-bg)}
+
+/* ── LOADING ── */
+#loading{position:fixed;inset:0;z-index:9999;background:var(--ink);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.1rem;transition:opacity .8s}
+#loading h1{font-family:'Playfair Display',serif;font-size:clamp(2rem,5vw,3.2rem);color:var(--cream);font-weight:400;font-style:italic;text-align:center;line-height:1.25}
+.ltags{display:flex;gap:7px;flex-wrap:wrap;justify-content:center}
+.ltag{font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;padding:3px 10px;border-radius:20px}
+.ltag.a{background:var(--rust);color:#fff}
+.ltag.b{background:var(--teal);color:#fff}
+.ltag.c{background:var(--mustard);color:var(--ink)}
+.lbar{width:80px;height:2px;background:rgba(255,255,255,.1);border-radius:1px;overflow:hidden;margin-top:.4rem}
+.lbar::after{content:'';display:block;height:100%;background:var(--rust);transform:translateX(-100%);animation:lp 2.2s ease forwards}
+@keyframes lp{to{transform:translateX(0)}}
+
+/* ── NAV ── */
+#nav{position:fixed;top:0;left:0;right:0;z-index:300;height:54px;display:flex;align-items:center;justify-content:space-between;padding:0 1.25rem;transition:background .3s,border-color .3s;border-bottom:1px solid rgba(0,0,0,.06)}
+.brand{font-family:'Playfair Display',serif;font-size:1rem;font-style:italic;letter-spacing:.01em}
+.tabs{display:flex;gap:2px}
+.tab{padding:6px 13px;border-radius:3px;font-size:.71rem;letter-spacing:.04em;cursor:pointer;border:none;background:transparent;font-family:'DM Sans',sans-serif;transition:all .18s;white-space:nowrap;font-weight:500;opacity:.55}
+.tab:hover{opacity:.85}
+.tab.on{opacity:1;font-weight:600}
+
+/* Nav per tab */
+body.tab-map    #nav{background:var(--t1-nav);border-color:rgba(255,255,255,.1)}
+body.tab-trips  #nav{background:var(--t2-nav);border-color:rgba(255,255,255,.1)}
+body.tab-picks  #nav{background:var(--t3-nav);border-color:rgba(45,122,110,.12)}
+body.tab-letters #nav{background:var(--t4-nav);border-color:rgba(255,255,255,.06)}
+body.tab-map    .brand,body.tab-map    .tab{color:#fff}
+body.tab-trips  .brand,body.tab-trips  .tab{color:#fff}
+body.tab-picks  .brand,body.tab-picks  .tab{color:var(--ink)}
+body.tab-letters .brand,body.tab-letters .tab{color:var(--cream)}
+body.tab-map    .tab.on{background:rgba(255,255,255,.18);color:#fff}
+body.tab-trips  .tab.on{background:rgba(255,255,255,.18);color:#fff}
+body.tab-picks  .tab.on{background:var(--pink);color:#fff}
+body.tab-letters .tab.on{background:var(--mustard);color:var(--ink)}
+
+/* ── PANELS ── */
+.panel{display:none;position:fixed;inset:0;top:54px;overflow:hidden}
+.panel.on{display:block}
+
+/* ══════════════════════════════════
+   TAB 1 — SYDNEY MAP
+══════════════════════════════════ */
+#p-map{background:var(--t1-bg)}
+#map-bar{position:absolute;top:0;left:0;right:0;z-index:20;display:flex;align-items:center;gap:5px;flex-wrap:wrap;padding:.5rem 1rem;background:rgba(45,122,110,.92);backdrop-filter:blur(8px);border-bottom:1px solid rgba(255,255,255,.1)}
+.yf{padding:3px 11px;border:1.5px solid rgba(255,255,255,.22);border-radius:20px;font-size:.67rem;cursor:pointer;background:transparent;color:rgba(255,255,255,.55);font-family:'DM Sans',sans-serif;font-weight:500;transition:all .15s}
+.yf:hover{color:#fff;border-color:rgba(255,255,255,.6)}
+.yf.on{background:#fff;color:var(--teal);border-color:#fff}
+.bar-gap{flex:1}
+.play-btn{display:flex;align-items:center;gap:5px;padding:5px 13px;border:1.5px solid rgba(255,255,255,.5);border-radius:3px;background:transparent;color:#fff;font-size:.68rem;letter-spacing:.07em;text-transform:uppercase;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:500;transition:all .18s}
+.play-btn:hover{background:rgba(255,255,255,.15)}
+
+/* Leaflet map */
+#map-leaflet-wrap{position:absolute;inset:0;top:44px;bottom:50px}
+#leaflet-map{width:100%;height:100%}
+
+/* Custom Leaflet pin */
+.lpin{width:14px;height:14px;border-radius:50%;border:2.5px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.35),0 0 0 3px rgba(255,255,255,.2);cursor:pointer;transition:transform .2s}
+.lpin.active{transform:scale(1.45);box-shadow:0 0 0 5px rgba(255,255,255,.35),0 2px 12px rgba(0,0,0,.4)}
+
+/* memory card */
+#mcard{position:absolute;top:60px;right:1rem;width:295px;background:var(--card);border-radius:6px;box-shadow:0 8px 32px rgba(44,56,48,.18);z-index:50;display:none;overflow:hidden}
+#mcard.open{display:block;animation:cardSlide .3s ease}
+@keyframes cardSlide{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+.mc-bar{height:4px}
+.mc-x{position:absolute;top:.55rem;right:.6rem;width:22px;height:22px;border-radius:50%;background:rgba(44,56,48,.1);border:none;color:var(--ink);font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s}
+.mc-x:hover{background:rgba(44,56,48,.2)}
+.mc-imgwrap{width:100%;height:155px;overflow:hidden;background:var(--sand2);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px}
+.mc-imgwrap img{width:100%;height:100%;object-fit:cover;display:block}
+.mc-noimg-lbl{font-size:.58rem;color:#bbb;letter-spacing:.07em;text-transform:uppercase}
+.mc-body{padding:.85rem 1rem .95rem}
+.mc-meta{display:flex;justify-content:space-between;margin-bottom:.35rem}
+.mc-date{font-size:.6rem;font-weight:500;letter-spacing:.08em;text-transform:uppercase}
+.mc-place{font-size:.6rem;color:var(--muted)}
+.mc-title{font-family:'Playfair Display',serif;font-size:1.05rem;font-style:italic;line-height:1.3;color:var(--ink);margin-bottom:.4rem}
+.mc-note{font-family:'Caveat',cursive;font-size:1rem;line-height:1.6;color:#4a5a58}
+.mc-nav{display:flex;gap:5px;margin-top:.7rem}
+.mc-nav button{flex:1;padding:5px;font-size:.62rem;letter-spacing:.06em;text-transform:uppercase;border:1.5px solid rgba(44,56,48,.15);background:transparent;color:var(--teal);border-radius:3px;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:500;transition:all .15s}
+.mc-nav button:hover{background:var(--teal);color:#fff;border-color:var(--teal)}
+.mc-nav button:disabled{opacity:.25;cursor:default;pointer-events:none}
+
+/* timeline */
+#tstrip{position:absolute;bottom:0;left:0;right:0;height:50px;background:rgba(44,56,48,.88);backdrop-filter:blur(8px);display:flex;align-items:center;padding:0 1rem;gap:0;overflow-x:auto;scrollbar-width:none;z-index:15}
+#tstrip::-webkit-scrollbar{display:none}
+.tc{font-size:.54rem;letter-spacing:.1em;text-transform:uppercase;white-space:nowrap;padding:0 7px;border-left:1.5px solid rgba(255,255,255,.15);flex-shrink:0;font-weight:500;color:rgba(255,255,255,.5)}
+.tline{height:1px;min-width:8px;max-width:28px;flex:1;background:rgba(255,255,255,.1)}
+.tdot{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.2);border:1.5px solid rgba(255,255,255,.35);flex-shrink:0;cursor:pointer;position:relative;transition:all .15s}
+.tdot:hover,.tdot.on{background:#fff;border-color:#fff;transform:scale(1.5)}
+.dtip{display:none;position:absolute;bottom:13px;left:50%;transform:translateX(-50%);background:var(--card);border-radius:3px;padding:2px 7px;white-space:nowrap;font-size:.58rem;color:var(--ink);box-shadow:0 2px 10px rgba(0,0,0,.15);pointer-events:none;z-index:30}
+.tdot:hover .dtip{display:block}
+
+/* play overlay */
+#play-ov{display:none;position:absolute;inset:0;top:44px;bottom:50px;z-index:40;pointer-events:none}
+#play-ov.on{display:block}
+#play-card{position:absolute;bottom:1.25rem;left:50%;transform:translateX(-50%);width:355px;background:rgba(44,56,48,.92);backdrop-filter:blur(12px);border:1.5px solid rgba(232,160,48,.25);border-radius:6px;padding:1.1rem 1.25rem;pointer-events:all;color:var(--cream)}
+.pc-ch{font-size:.57rem;letter-spacing:.12em;text-transform:uppercase;color:var(--mustard);margin-bottom:.25rem;font-weight:500}
+.pc-ti{font-family:'Playfair Display',serif;font-size:1.1rem;font-style:italic;color:var(--cream);margin-bottom:.18rem}
+.pc-me{font-size:.63rem;color:rgba(250,245,236,.4);margin-bottom:.48rem}
+.pc-no{font-family:'Caveat',cursive;font-size:.98rem;line-height:1.6;color:rgba(250,245,236,.82);margin-bottom:.8rem}
+.pc-btns{display:flex;align-items:center;gap:7px}
+.pc-btn{padding:5px 13px;border:1.5px solid rgba(232,160,48,.35);border-radius:3px;background:transparent;color:var(--mustard);font-size:.63rem;letter-spacing:.07em;text-transform:uppercase;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:500;transition:all .15s}
+.pc-btn:hover{background:var(--mustard);color:var(--ink)}
+.pc-stop{margin-left:auto;background:none;border:none;color:rgba(250,245,236,.3);font-size:.6rem;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;font-family:'DM Sans',sans-serif}
+.pc-stop:hover{color:rgba(250,245,236,.75)}
+.pc-dots{display:flex;gap:4px;margin-top:.7rem;flex-wrap:wrap}
+.pc-dot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.12);transition:background .2s;flex-shrink:0}
+.pc-dot.on{background:var(--mustard)}
+
+/* ══════════════════════════════════
+   TAB 2 — TRIPS  (dusty rose + cream)
+══════════════════════════════════ */
+#p-trips{background:var(--t2-bg);overflow:hidden}
+#trips-scroll{height:100%;overflow-y:auto;padding:1.75rem 1.75rem 4rem;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.15) transparent}
+.yr-lbl{font-size:.6rem;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.45);margin-bottom:1rem;padding-bottom:.35rem;border-bottom:1px solid rgba(255,255,255,.12);font-weight:500}
+.trips-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(182px,1fr));gap:1.25rem;margin-bottom:2.25rem}
+.polaroid{background:#FFFCF5;cursor:pointer;position:relative;box-shadow:2px 4px 18px rgba(0,0,0,.22),0 1px 4px rgba(0,0,0,.1);transition:transform .25s,box-shadow .25s;padding:10px 10px 36px}
+.polaroid:nth-child(1){transform:rotate(-2.1deg)}
+.polaroid:nth-child(2){transform:rotate(1.4deg)}
+.polaroid:nth-child(3){transform:rotate(-.9deg)}
+.polaroid:nth-child(4){transform:rotate(1.7deg)}
+.polaroid:nth-child(5){transform:rotate(-.5deg)}
+.polaroid:hover{transform:rotate(0) scale(1.05) !important;box-shadow:4px 10px 30px rgba(0,0,0,.28);z-index:10}
+.pol-img{width:100%;aspect-ratio:1;background:#e8dfc8;display:flex;align-items:center;justify-content:center;overflow:hidden;margin-bottom:8px;position:relative}
+.pol-img img{width:100%;height:100%;object-fit:cover}
+.pol-badge{position:absolute;top:6px;left:6px;font-size:.55rem;letter-spacing:.07em;text-transform:uppercase;font-weight:500;padding:2px 7px;border-radius:20px;color:#fff}
+.pol-pin{position:absolute;top:-8px;left:50%;transform:translateX(-50%);width:13px;height:13px;border-radius:50%;box-shadow:0 1px 5px rgba(0,0,0,.35);border:2px solid rgba(255,255,255,.65)}
+.pol-name{font-family:'Caveat',cursive;font-size:1.1rem;color:var(--ink);text-align:center;line-height:1.2;font-weight:600}
+.pol-reg{font-family:'Caveat',cursive;font-size:.85rem;color:#9a8f82;text-align:center}
+#trip-detail{display:none;position:fixed;inset:0;z-index:400;background:rgba(0,0,0,.65);align-items:center;justify-content:center;padding:1.5rem}
+#trip-detail.open{display:flex}
+.td-inner{background:var(--card);border-radius:6px;max-width:700px;width:100%;max-height:88vh;overflow-y:auto;position:relative}
+.td-close{position:absolute;top:.85rem;right:.95rem;background:none;border:none;font-size:1.1rem;color:var(--muted);cursor:pointer;line-height:1}
+.td-close:hover{color:var(--ink)}
+.td-banner{height:6px;border-radius:6px 6px 0 0}
+.td-head{padding:1.5rem 1.75rem .9rem}
+.td-region{font-size:.58rem;letter-spacing:.12em;text-transform:uppercase;font-weight:500;margin-bottom:.3rem}
+.td-tname{font-family:'Playfair Display',serif;font-size:1.65rem;font-style:italic;color:var(--ink);line-height:1.15;margin-bottom:.25rem}
+.td-dates{font-size:.74rem;color:var(--muted)}
+.td-gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:5px;padding:0 1.75rem}
+.td-gimg{aspect-ratio:4/3;background:#e8dfc8;border-radius:2px;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.td-gimg img{width:100%;height:100%;object-fit:cover;display:block}
+.td-notes{padding:1.2rem 1.75rem 2rem}
+.td-nlbl{font-size:.57rem;letter-spacing:.1em;text-transform:uppercase;color:var(--teal);font-weight:500;margin-bottom:.45rem}
+.td-np{font-family:'Caveat',cursive;font-size:1.1rem;line-height:1.72;color:#4a5a58}
+
+/* ══════════════════════════════════
+   TAB 3 — OUR PICKS  (cream + pink, Airbnb-style split)
+══════════════════════════════════ */
+#p-picks{background:var(--t3-bg);overflow:hidden}
+#picks-layout{position:absolute;inset:0;display:flex}
+
+/* Left list column */
+#picks-list-col{width:380px;flex-shrink:0;display:flex;flex-direction:column;background:var(--cream);border-right:1px solid rgba(44,56,48,.1)}
+#picks-filter-bar{padding:.65rem 1rem;display:flex;align-items:center;gap:5px;flex-wrap:wrap;border-bottom:1px solid rgba(44,56,48,.1);background:var(--cream)}
+.pf{padding:4px 11px;border:1.5px solid rgba(44,56,48,.18);border-radius:20px;font-size:.67rem;cursor:pointer;background:transparent;color:rgba(44,56,48,.5);font-family:'DM Sans',sans-serif;font-weight:500;transition:all .15s}
+.pf:hover{color:var(--ink);border-color:var(--pink)}
+.pf.on{background:var(--pink);color:#fff;border-color:var(--pink)}
+.pf.on.coffee{background:#8B5E3C;border-color:#8B5E3C}
+.pf.on.food{background:var(--rust);border-color:var(--rust)}
+.pf.on.drinks{background:var(--teal);border-color:var(--teal)}
+#picks-count{padding:.45rem 1rem;font-size:.64rem;color:var(--muted);border-bottom:1px solid rgba(44,56,48,.07);background:var(--sand)}
+#picks-list{flex:1;overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(44,56,48,.1) transparent}
+.pick-list-item{display:flex;gap:10px;padding:.85rem 1rem;border-bottom:1px solid rgba(44,56,48,.07);cursor:pointer;transition:background .15s;position:relative}
+.pick-list-item:hover{background:var(--sand)}
+.pick-list-item.active{background:var(--sand2)}
+.pick-list-item.hidden{display:none}
+.pli-img{width:62px;height:62px;border-radius:4px;overflow:hidden;flex-shrink:0;background:var(--sand2);display:flex;align-items:center;justify-content:center}
+.pli-img img{width:100%;height:100%;object-fit:cover}
+.pli-body{flex:1;min-width:0}
+.pli-name{font-family:'Playfair Display',serif;font-size:.95rem;font-style:italic;color:var(--ink);line-height:1.2;margin-bottom:.18rem}
+.pli-sub{font-size:.62rem;color:var(--muted);margin-bottom:.25rem}
+.pli-stars{font-size:.75rem;letter-spacing:1px;margin-bottom:.2rem}
+.pli-note{font-family:'Caveat',cursive;font-size:.88rem;line-height:1.5;color:#5a6a68;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.pli-type-dot{position:absolute;top:.85rem;right:.9rem;width:8px;height:8px;border-radius:50%}
+
+/* Right map column */
+#picks-map-col{flex:1;position:relative}
+#picks-leaflet{width:100%;height:100%}
+
+/* picks popup (on the map side) */
+#picks-popup{position:absolute;z-index:100;width:235px;background:var(--card);border-radius:5px;box-shadow:0 6px 24px rgba(44,56,48,.18);display:none;overflow:hidden;top:1rem;right:1rem}
+#picks-popup.open{display:block;animation:cardSlide .2s ease}
+.pp-bar{height:4px}
+.pp-x{position:absolute;top:.45rem;right:.55rem;background:none;border:none;font-size:.9rem;color:var(--muted);cursor:pointer;line-height:1}
+.pp-x:hover{color:var(--ink)}
+.pp-body{padding:.75rem 1rem .9rem}
+.pp-name{font-family:'Playfair Display',serif;font-size:.97rem;font-style:italic;color:var(--ink);margin-bottom:.12rem}
+.pp-suburb{font-size:.6rem;color:var(--muted);margin-bottom:.35rem}
+.pp-stars{font-size:.8rem;letter-spacing:1px;margin-bottom:.28rem}
+.pp-note{font-family:'Caveat',cursive;font-size:.92rem;line-height:1.55;color:#4a5a58}
+
+/* ══════════════════════════════════
+   TAB 4 — LETTERS  (warm charcoal + mustard)
+══════════════════════════════════ */
+#p-letters{background:var(--t4-bg);overflow:hidden}
+#letters-scroll{height:100%;overflow-y:auto;padding:2rem 1.75rem 4rem;scrollbar-width:thin;scrollbar-color:rgba(232,160,48,.18) transparent}
+.letters-head{margin-bottom:1.75rem}
+.letters-head h2{font-family:'Playfair Display',serif;font-size:2rem;font-style:italic;font-weight:400;color:var(--cream);line-height:1.2}
+.letters-head p{font-size:.76rem;color:rgba(250,245,236,.38);margin-top:.3rem}
+.letters-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:1.1rem}
+.flip-wrap{height:242px;perspective:900px;cursor:pointer}
+.flip-inner{width:100%;height:100%;position:relative;transform-style:preserve-3d;transition:transform .55s cubic-bezier(.4,0,.2,1)}
+.flip-wrap.flipped .flip-inner{transform:rotateY(180deg)}
+.flip-front,.flip-back{position:absolute;inset:0;backface-visibility:hidden;border-radius:5px;overflow:hidden}
+.flip-front{background:rgba(255,255,255,.05);border:1.5px solid rgba(250,245,236,.1);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.6rem;padding:1.25rem;position:relative}
+.ff-accent{position:absolute;top:0;left:0;right:0;height:4px;border-radius:5px 5px 0 0}
+.ff-av{width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.ff-av img{width:100%;height:100%;object-fit:cover}
+.ff-av span{font-family:'Playfair Display',serif;font-size:1.2rem}
+.ff-name{font-family:'Playfair Display',serif;font-size:.97rem;font-style:italic;color:var(--cream);text-align:center}
+.ff-rel{font-size:.58rem;letter-spacing:.07em;text-transform:uppercase;color:rgba(250,245,236,.38);text-align:center}
+.ff-hint{font-size:.6rem;color:var(--mustard);font-weight:500}
+.flip-back{background:rgba(255,255,255,.06);border:1.5px solid rgba(232,160,48,.16);transform:rotateY(180deg);display:flex;flex-direction:column;padding:1rem 1.1rem}
+.fb-from{font-size:.54rem;letter-spacing:.1em;text-transform:uppercase;color:var(--mustard);margin-bottom:.42rem;font-weight:500}
+.fb-note{font-family:'Caveat',cursive;font-size:.97rem;line-height:1.65;color:rgba(250,245,236,.88);flex:1;overflow:hidden}
+.fb-sig{font-family:'Playfair Display',serif;font-style:italic;font-size:.78rem;color:rgba(232,160,48,.58);margin-top:.4rem;text-align:right}
+
+/* ── MOBILE ── */
+#mob-view{display:none;position:fixed;inset:0;top:54px;overflow-y:auto;background:var(--t1-bg)}
+.mob-year-bar{position:sticky;top:0;z-index:10;background:rgba(45,122,110,.95);backdrop-filter:blur(6px);display:flex;align-items:center;gap:4px;padding:.5rem .9rem;border-bottom:1px solid rgba(255,255,255,.1);overflow-x:auto;scrollbar-width:none}
+.mob-year-bar::-webkit-scrollbar{display:none}
+.myf{padding:3px 9px;border:1.5px solid rgba(255,255,255,.2);border-radius:20px;font-size:.62rem;cursor:pointer;background:transparent;color:rgba(255,255,255,.45);font-family:'DM Sans',sans-serif;font-weight:500;transition:all .15s;flex-shrink:0}
+.myf:hover{color:#fff;border-color:rgba(255,255,255,.6)}
+.myf.on{background:#fff;color:var(--teal);border-color:#fff}
+.mob-list{padding:1rem .9rem 3rem}
+.mb-ch{display:flex;align-items:center;gap:6px;margin:1.4rem 0 .6rem}
+.mb-ch:first-child{margin-top:.2rem}
+.mb-chdot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.mb-chlabel{font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;font-weight:500}
+.mb-card{display:flex;margin-bottom:.55rem;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:4px;overflow:hidden;cursor:pointer;transition:border-color .15s}
+.mb-card:hover,.mb-card.open{border-color:rgba(255,255,255,.35)}
+.mb-thumb{width:64px;flex-shrink:0;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;min-height:64px;overflow:hidden}
+.mb-thumb img{width:100%;height:100%;object-fit:cover}
+.mb-bdy{padding:.6rem .75rem .6rem 0;flex:1}
+.mb-date{font-size:.57rem;letter-spacing:.08em;text-transform:uppercase;margin-bottom:2px;font-weight:500}
+.mb-title{font-family:'Playfair Display',serif;font-size:.87rem;font-style:italic;color:var(--cream);line-height:1.3}
+.mb-place{font-size:.57rem;color:rgba(250,245,236,.35);margin-top:2px}
+.mb-note{font-family:'Caveat',cursive;font-size:.9rem;line-height:1.55;color:rgba(250,245,236,.7);margin-top:.4rem;display:none}
+.mb-card.open .mb-note{display:block}
+
+/* leaflet overrides */
+.leaflet-container{background:#e8e0cc}
+.leaflet-control-zoom a{color:var(--ink)!important;border-color:rgba(44,56,48,.15)!important}
+
+@media(max-width:900px){
+  #picks-list-col{width:300px}
+}
+@media(max-width:768px){
+  #p-map,#p-trips,#p-picks,#p-letters{display:none!important}
+  #mob-view{display:block}
+  .tab{padding:5px 8px;font-size:.63rem}
+}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body class="tab-map">
+
+<!-- LOADING -->
+<div id="loading">
+  <h1>Shreya & Nik<br>Sydney</h1>
+  <div class="ltags"><span class="ltag a">2022–2026</span><span class="ltag b">one city</span><span class="ltag c">four years</span></div>
+  <div class="lbar"></div>
+</div>
+
+<!-- NAV -->
+<nav id="nav">
+  <div class="brand">S & N · Sydney</div>
+  <div class="tabs">
+    <button class="tab on" onclick="showTab('map',this)">Sydney Map</button>
+    <button class="tab" onclick="showTab('trips',this)">Trips</button>
+    <button class="tab" onclick="showTab('picks',this)">Our Picks</button>
+    <button class="tab" onclick="showTab('letters',this)">Letters</button>
+  </div>
+</nav>
+
+<!-- ══ TAB 1 MAP ══ -->
+<div class="panel on" id="p-map">
+  <div id="map-bar">
+    <div class="yf on" onclick="filterYear('all',this)">All</div>
+    <div class="yf" onclick="filterYear('2022',this)">2022</div>
+    <div class="yf" onclick="filterYear('2023',this)">2023</div>
+    <div class="yf" onclick="filterYear('2024',this)">2024</div>
+    <div class="yf" onclick="filterYear('2025',this)">2025</div>
+    <div class="yf" onclick="filterYear('2026',this)">2026</div>
+    <div class="bar-gap"></div>
+    <button class="play-btn" id="play-btn" onclick="startPlay()">▶ Play all</button>
+  </div>
+  <div id="map-leaflet-wrap"><div id="leaflet-map"></div></div>
+  <div id="mcard">
+    <div class="mc-bar" id="mc-bar"></div>
+    <button class="mc-x" onclick="closeCard()">✕</button>
+    <div id="mc-photo-area"></div>
+    <div class="mc-body">
+      <div class="mc-meta"><span class="mc-date" id="mc-date"></span><span class="mc-place" id="mc-place"></span></div>
+      <div class="mc-title" id="mc-title"></div>
+      <div class="mc-note" id="mc-note"></div>
+      <div class="mc-nav"><button id="btn-p" onclick="navCard(-1)">← Prev</button><button id="btn-n" onclick="navCard(1)">Next →</button></div>
+    </div>
+  </div>
+  <div id="play-ov">
+    <div id="play-card">
+      <div class="pc-ch" id="pc-ch"></div>
+      <div class="pc-ti" id="pc-ti"></div>
+      <div class="pc-me" id="pc-me"></div>
+      <div class="pc-no" id="pc-no"></div>
+      <div class="pc-btns"><button class="pc-btn" onclick="playPrev()">← Back</button><button class="pc-btn" onclick="playNext()">Next →</button><button class="pc-stop" onclick="stopPlay()">✕ stop</button></div>
+      <div class="pc-dots" id="pc-dots"></div>
+    </div>
+  </div>
+  <div id="tstrip"></div>
+</div>
+
+<!-- ══ TAB 2 TRIPS ══ -->
+<div class="panel" id="p-trips">
+  <div id="trips-scroll"><div id="trips-inner"></div></div>
+</div>
+<div id="trip-detail">
+  <div class="td-inner">
+    <button class="td-close" onclick="closeTripDetail()">✕</button>
+    <div class="td-banner" id="td-banner"></div>
+    <div class="td-head">
+      <div class="td-region" id="td-region"></div>
+      <div class="td-tname" id="td-tname"></div>
+      <div class="td-dates" id="td-dates"></div>
+    </div>
+    <div class="td-gallery" id="td-gallery"></div>
+    <div class="td-notes"><div class="td-nlbl">What we remember</div><p class="td-np" id="td-np"></p></div>
+  </div>
+</div>
+
+<!-- ══ TAB 3 PICKS ══ -->
+<div class="panel" id="p-picks">
+  <div id="picks-layout">
+    <div id="picks-list-col">
+      <div id="picks-filter-bar">
+        <button class="pf on all" onclick="filterPicks('all',this)">All</button>
+        <button class="pf" onclick="filterPicks('coffee',this)">☕ Coffee</button>
+        <button class="pf" onclick="filterPicks('food',this)">🍽 Food</button>
+        <button class="pf" onclick="filterPicks('drinks',this)">🍷 Drinks</button>
+      </div>
+      <div id="picks-count"></div>
+      <div id="picks-list"></div>
+    </div>
+    <div id="picks-map-col">
+      <div id="picks-leaflet"></div>
+      <div id="picks-popup">
+        <button class="pp-x" onclick="closePicksPopup()">✕</button>
+        <div class="pp-bar" id="pp-bar"></div>
+        <div class="pp-body">
+          <div class="pp-name" id="pp-name"></div>
+          <div class="pp-suburb" id="pp-suburb"></div>
+          <div class="pp-stars" id="pp-stars"></div>
+          <div class="pp-note" id="pp-note"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ TAB 4 LETTERS ══ -->
+<div class="panel" id="p-letters">
+  <div id="letters-scroll">
+    <div class="letters-head"><h2>Notes for Nik</h2><p>From everyone who was part of this chapter</p></div>
+    <div class="letters-grid" id="letters-grid"></div>
+  </div>
+</div>
+
+<!-- MOBILE -->
+<div id="mob-view">
+  <div class="mob-year-bar">
+    <div class="myf on" onclick="mobFilterYear('all',this)">All</div>
+    <div class="myf" onclick="mobFilterYear('2022',this)">2022</div>
+    <div class="myf" onclick="mobFilterYear('2023',this)">2023</div>
+    <div class="myf" onclick="mobFilterYear('2024',this)">2024</div>
+    <div class="myf" onclick="mobFilterYear('2025',this)">2025</div>
+    <div class="myf" onclick="mobFilterYear('2026',this)">2026</div>
+  </div>
+  <div class="mob-list" id="mob-list"></div>
+</div>
+
+<script>
+// ════════════════════════════════════════════
+// ★ DATA — edit everything in this section ★
+// ════════════════════════════════════════════
+const CHAPTER_COLORS={"The Firsts":"#D4522A","Finding Our Feet":"#2D7A6E","The Good Chaos":"#E8A030","Last Chapter":"#D4607A"};
+
+const memories=[
+  {date:"Feb 2022",year:"2022",place:"Kensington",title:"First student accommodation",note:"A tiny room, terrible wifi, and exactly zero idea what Sydney was going to be. We made it work anyway.",lat:-33.9173,lng:151.2230,photo:"",chapter:"The Firsts"},
+  {date:"Mar 2022",year:"2022",place:"Central Station",title:"The day we actually met",note:"I remember thinking you seemed like you knew what you were doing. You absolutely did not. Neither did I.",lat:-33.8833,lng:151.2056,photo:"",chapter:"The Firsts"},
+  {date:"Mar 2022",year:"2022",place:"Newtown",title:"First coffee, first wander",note:"King Street on a Saturday. We walked too far and didn't care.",lat:-33.8965,lng:151.1787,photo:"",chapter:"The Firsts"},
+  {date:"Apr 2022",year:"2022",place:"Westfield Sydney",title:"First proper shopping trip",note:"You insisted on buying me something. I said I was fine. You bought it anyway.",lat:-33.8720,lng:151.2089,photo:"",chapter:"The Firsts"},
+  {date:"May 2022",year:"2022",place:"Centennial Park",title:"First picnic",note:"Too much food. Wet grass. Perfect.",lat:-33.8969,lng:151.2330,photo:"",chapter:"The Firsts"},
+  {date:"Jul 2022",year:"2022",place:"Coogee Beach",title:"First winter swim",note:"You dared me. I went in. You watched from shore and called that participation.",lat:-33.9225,lng:151.2566,photo:"",chapter:"The Firsts"},
+  {date:"Jan 2023",year:"2023",place:"Surry Hills",title:"New year, new suburb",note:"Our own place. Boxes everywhere. Takeaway on the floor. Best night.",lat:-33.8854,lng:151.2101,photo:"",chapter:"Finding Our Feet"},
+  {date:"Mar 2023",year:"2023",place:"Bondi Beach",title:"The Sunday ritual",note:"Bondi every Sunday. Coffee on Campbell Parade, walk to Bronte, back. Never boring.",lat:-33.8914,lng:151.2767,photo:"",chapter:"Finding Our Feet"},
+  {date:"Jun 2023",year:"2023",place:"The Rocks",title:"Night markets in winter",note:"Mulled wine and questionable decisions. You bought a candle that smelled like a forest.",lat:-33.8592,lng:151.2090,photo:"",chapter:"Finding Our Feet"},
+  {date:"Dec 2023",year:"2023",place:"Sydney Harbour",title:"New Year's Eve",note:"We found a spot. Stayed for hours. Fireworks unreal. Then lost the train home.",lat:-33.8568,lng:151.2153,photo:"",chapter:"Finding Our Feet"},
+  {date:"Feb 2024",year:"2024",place:"Leichhardt",title:"The Italian quarter phase",note:"Pasta three weeks in a row. Different places. Ranking them felt necessary.",lat:-33.8833,lng:151.1579,photo:"",chapter:"The Good Chaos"},
+  {date:"Aug 2024",year:"2024",place:"Glebe",title:"Saturday markets",note:"You always found the weirdest stall. I always found the best snack.",lat:-33.8791,lng:151.1868,photo:"",chapter:"The Good Chaos"},
+  {date:"Jan 2025",year:"2025",place:"Manly",title:"The ferry summer",note:"That whole month on the ferry. Manly felt like a different world.",lat:-33.7970,lng:151.2877,photo:"",chapter:"Last Chapter"},
+  {date:"May 2025",year:"2025",place:"Camperdown",title:"Neighbourhood walk",note:"Camperdown Park. Slow. No destination. That felt right.",lat:-33.8887,lng:151.1788,photo:"",chapter:"Last Chapter"},
+  {date:"Jun 2026",year:"2026",place:"Sydney",title:"Here we are",note:"Four years. A whole Sydney life. I wouldn't change any of it.",lat:-33.8688,lng:151.2093,photo:"",chapter:"Last Chapter"},
+];
+
+const trips=[
+  // ── 2022 ──
+  {name:"Coomba Bay",region:"NSW Mid North Coast",dates:"Jul 2022",sortKey:"2022-07",color:"#2D7A6E",
+   cover:"",photos:["photos/trips/coomba-bay-1.jpg","photos/trips/coomba-bay-2.jpg","photos/trips/coomba-bay-3.jpg"],
+   note:"Add your note here — what happened, what you remember, how it felt."},
+  {name:"Newcastle",region:"NSW North",dates:"Apr 2022",sortKey:"2022-04",color:"#D4522A",
+   cover:"",photos:["photos/trips/newcastle-1.jpg","photos/trips/newcastle-2.jpg"],
+   note:"Add your note here."},
+
+  // ── 2023 ──
+  {name:"Gold Coast · Coffs Harbour · Port Macquarie",region:"NSW & QLD Road Trip",dates:"Apr 2023",sortKey:"2023-04",color:"#E8A030",
+   cover:"",photos:["photos/trips/roadtrip-1.jpg","photos/trips/roadtrip-2.jpg","photos/trips/roadtrip-3.jpg","photos/trips/roadtrip-4.jpg"],
+   note:"Add your note here."},
+  {name:"Port Stephens",region:"NSW North",dates:"Sep 2023",sortKey:"2023-09",color:"#D4607A",
+   cover:"",photos:["photos/trips/port-stephens-1.jpg","photos/trips/port-stephens-2.jpg","photos/trips/port-stephens-3.jpg"],
+   note:"Sand dunes at sunset. Dolphins in the bay. Slightly unreal."},
+
+  // ── 2024 ──
+  {name:"Lower Mangrove · Pure Valley Estate",region:"NSW Central Coast",dates:"Jan 2024",sortKey:"2024-01",color:"#2D7A6E",
+   cover:"",photos:["photos/trips/pure-valley-1.jpg","photos/trips/pure-valley-2.jpg","photos/trips/pure-valley-3.jpg"],
+   note:"Add your note here."},
+  {name:"Dural",region:"NSW Hills District",dates:"Mar 2024",sortKey:"2024-03",color:"#8B5E3C",
+   cover:"",photos:["photos/trips/dural-1.jpg","photos/trips/dural-2.jpg"],
+   note:"Add your note here."},
+  {name:"Sunshine Coast",region:"QLD",dates:"Feb 2024",sortKey:"2024-02",color:"#D4522A",
+   cover:"",photos:["photos/trips/sunshine-coast-1.jpg","photos/trips/sunshine-coast-2.jpg","photos/trips/sunshine-coast-3.jpg"],
+   note:"Noosa. The national park walk. That breakfast at the top. Perfect."},
+  {name:"Berry",region:"NSW South Coast",dates:"Jun 2024",sortKey:"2024-06a",color:"#E8A030",
+   cover:"",photos:["photos/trips/berry-1.jpg","photos/trips/berry-2.jpg","photos/trips/berry-3.jpg"],
+   note:"The main street in a quiet weekend. That bakery. The drive down."},
+  {name:"Gerringong",region:"NSW South Coast",dates:"Jun 2024",sortKey:"2024-06b",color:"#D4607A",
+   cover:"",photos:["photos/trips/gerringong-1.jpg","photos/trips/gerringong-2.jpg"],
+   note:"Add your note here."},
+  {name:"Bateman Bay",region:"NSW South Coast",dates:"Sep 2024",sortKey:"2024-09a",color:"#2D7A6E",
+   cover:"",photos:["photos/trips/bateman-bay-1.jpg","photos/trips/bateman-bay-2.jpg","photos/trips/bateman-bay-3.jpg"],
+   note:"Add your note here."},
+  {name:"Kiama",region:"NSW South Coast",dates:"Sep 2024",sortKey:"2024-09b",color:"#D4522A",
+   cover:"",photos:["photos/trips/kiama-1.jpg","photos/trips/kiama-2.jpg"],
+   note:"Add your note here."},
+  {name:"Hunter Valley",region:"NSW Wine Country",dates:"Nov 2024",sortKey:"2024-11",color:"#8B5E3C",
+   cover:"",photos:["photos/trips/hunter-valley-1.jpg","photos/trips/hunter-valley-2.jpg","photos/trips/hunter-valley-3.jpg"],
+   note:"Add your note here."},
+
+  // ── 2025 ──
+  {name:"Tasmania",region:"TAS",dates:"Aug 2025",sortKey:"2025-08",color:"#2D7A6E",
+   cover:"",photos:["photos/trips/tasmania-1.jpg","photos/trips/tasmania-2.jpg","photos/trips/tasmania-3.jpg","photos/trips/tasmania-4.jpg"],
+   note:"Add your note here."},
+
+  // ── 2026 ──
+  {name:"Blue Mountains",region:"NSW Day Trip",dates:"Apr 2026",sortKey:"2026-04",color:"#E8A030",
+   cover:"",photos:["photos/trips/blue-mountains-1.jpg","photos/trips/blue-mountains-2.jpg","photos/trips/blue-mountains-3.jpg"],
+   note:"Add your note here."},
+  {name:"Aruna Estate · Penrose",region:"NSW Southern Highlands",dates:"2026",sortKey:"2026-05",color:"#D4607A",
+   cover:"",photos:["photos/trips/aruna-1.jpg","photos/trips/aruna-2.jpg","photos/trips/aruna-3.jpg"],
+   note:"The stay that reset everything. Worth every cent. That view at sunrise."},
+].sort((a,b)=>a.sortKey.localeCompare(b.sortKey));
+
+const picks=[
+  {name:"Single O",suburb:"Surry Hills",type:"coffee",rating:5,note:"Non-negotiable. Best flat white in Sydney.",lat:-33.8860,lng:151.2115,photo:""},
+  {name:"Paramount Coffee",suburb:"Surry Hills",type:"coffee",rating:5,note:"Order the cornbread. Always.",lat:-33.8848,lng:151.2068,photo:""},
+  {name:"Gumption",suburb:"CBD",type:"coffee",rating:4,note:"Tiny. Perfect. Worth the queue.",lat:-33.8696,lng:151.2082,photo:""},
+  {name:"Artificer",suburb:"Surry Hills",type:"coffee",rating:5,note:"Coffee taken very seriously here. Correct.",lat:-33.8878,lng:151.2048,photo:""},
+  {name:"Bourke St Bakery",suburb:"Surry Hills",type:"food",rating:5,note:"The sausage roll changed us both.",lat:-33.8862,lng:151.2136,photo:""},
+  {name:"Porteño",suburb:"Surry Hills",type:"food",rating:5,note:"The lamb. Just the lamb. We still talk about it.",lat:-33.8866,lng:151.2095,photo:""},
+  {name:"Automata",suburb:"Chippendale",type:"food",rating:4,note:"The most beautiful plates we've ever received.",lat:-33.8892,lng:151.1967,photo:""},
+  {name:"Cho Cho San",suburb:"Potts Point",type:"food",rating:5,note:"Japanese-ish. Incredible. Bar seats only.",lat:-33.8724,lng:151.2199,photo:""},
+  {name:"Butter",suburb:"Potts Point",type:"food",rating:4,note:"Fried chicken at 1am. No regrets.",lat:-33.8718,lng:151.2182,photo:""},
+  {name:"Shady Pines",suburb:"Darlinghurst",type:"drinks",rating:5,note:"The bar with no sign. You'll find it.",lat:-33.8773,lng:151.2195,photo:""},
+  {name:"Eau-de-Vie",suburb:"Darlinghurst",type:"drinks",rating:4,note:"Theatrical cocktails. The ice selection is absurd.",lat:-33.8765,lng:151.2188,photo:""},
+  {name:"Maybe Sammy",suburb:"The Rocks",type:"drinks",rating:5,note:"One of the best bars in the world. We go too often.",lat:-33.8600,lng:151.2072,photo:""},
+];
+
+const letters=[
+  {name:"Shreya",relation:"Your person",initials:"S",photo:"",color:"#D4522A",note:"Four years, one city, a hundred bad decisions that turned out right.\n\nI'm glad it was you. I'm glad it was Sydney.\n\nWherever you go next, you take this with you. I'll keep the map warm.",sig:"Always, Shreya ✦"},
+  {name:"Add a friend",relation:"their relation to Nik",initials:"?",photo:"",color:"#2D7A6E",note:"Paste your friend's note here. Or write it yourself.",sig:""},
+  {name:"Add a friend",relation:"their relation to Nik",initials:"?",photo:"",color:"#E8A030",note:"Another letter goes here.",sig:""},
+  {name:"Add a friend",relation:"their relation to Nik",initials:"?",photo:"",color:"#D4607A",note:"As many as you need. Each card flips on its own.",sig:""},
+];
+
+// ════════════════════════════════════════════
+// TAB 1 — LEAFLET MAP (memories)
+// ════════════════════════════════════════════
+let leafletMap=null, memMarkers=[], filteredMems=[...memories];
+let currentIdx=null, activeYear='all', playMode=false, playIdx=0;
+
+const typeColors={coffee:'#8B5E3C',food:'#D4522A',drinks:'#2D7A6E'};
+
+function makeCircleIcon(color,size=14,active=false){
+  const s=active?size*1.5:size;
+  return L.divIcon({
+    html:`<div style="width:${s}px;height:${s}px;border-radius:50%;background:${color};border:2.5px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.35)${active?',0 0 0 5px '+color+'44':''};transition:all .2s"></div>`,
+    className:'',iconSize:[s,s],iconAnchor:[s/2,s/2]
+  });
+}
+
+function initLeafletMap(){
+  leafletMap=L.map('leaflet-map',{zoomControl:true,scrollWheelZoom:true}).setView([-33.8688,151.2093],13);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',{
+    attribution:'© OpenStreetMap © CARTO',
+    subdomains:'abcd',maxZoom:19
+  }).addTo(leafletMap);
+
+  memories.forEach((m,i)=>{
+    const col=CHAPTER_COLORS[m.chapter]||'#D4522A';
+    const marker=L.marker([m.lat,m.lng],{icon:makeCircleIcon(col)}).addTo(leafletMap);
+    marker.on('click',()=>openMemory(i));
+    memMarkers.push(marker);
+  });
+  buildTimeline();
+}
+
+function filterYear(y,btn){
+  activeYear=y;
+  document.querySelectorAll('.yf').forEach(b=>b.classList.remove('on'));
+  if(btn)btn.classList.add('on');
+  filteredMems=memories.filter(m=>y==='all'||m.year===y);
+  memMarkers.forEach((mk,i)=>{
+    const vis=y==='all'||memories[i].year===y;
+    if(vis)mk.addTo(leafletMap); else leafletMap.removeLayer(mk);
+  });
+  buildTimeline();
+  document.getElementById('play-btn').textContent=`▶ Play ${y==='all'?'all':y}`;
+  if(currentIdx!==null&&!filteredMems.includes(memories[currentIdx]))closeCard();
+}
+
+function openMemory(i){
+  const m=memories[i]; currentIdx=i;
+  const col=CHAPTER_COLORS[m.chapter]||'#D4522A';
+  memMarkers.forEach((mk,j)=>mk.setIcon(makeCircleIcon(CHAPTER_COLORS[memories[j].chapter]||'#D4522A',14,j===i)));
+  document.querySelectorAll('.tdot').forEach((d,j)=>d.classList.toggle('on',filteredMems[j]===m));
+  document.getElementById('mc-bar').style.background=col;
+  document.getElementById('mc-date').style.color=col;
+  document.getElementById('mc-date').textContent=m.date;
+  document.getElementById('mc-place').textContent=m.place;
+  document.getElementById('mc-title').textContent=m.title;
+  document.getElementById('mc-note').textContent=m.note;
+  document.getElementById('mc-photo-area').innerHTML=m.photo
+    ?`<div class="mc-imgwrap"><img src="${m.photo}" alt="${m.title}" loading="lazy"></div>`
+    :`<div class="mc-imgwrap"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg><div class="mc-noimg-lbl">add your photo</div></div>`;
+  const fi=filteredMems.indexOf(m);
+  document.getElementById('btn-p').disabled=fi<=0;
+  document.getElementById('btn-n').disabled=fi>=filteredMems.length-1;
+  document.getElementById('mcard').classList.add('open');
+  leafletMap.panTo([m.lat,m.lng],{animate:true,duration:.5});
+}
+function closeCard(){
+  document.getElementById('mcard').classList.remove('open');
+  memMarkers.forEach((mk,j)=>mk.setIcon(makeCircleIcon(CHAPTER_COLORS[memories[j].chapter]||'#D4522A')));
+  document.querySelectorAll('.tdot').forEach(d=>d.classList.remove('on'));
+  currentIdx=null;
+}
+function navCard(dir){
+  if(currentIdx===null)return;
+  const fi=filteredMems.indexOf(memories[currentIdx]);
+  const next=fi+dir;
+  if(next>=0&&next<filteredMems.length)openMemory(memories.indexOf(filteredMems[next]));
+}
+
+function startPlay(){if(!filteredMems.length)return;closeCard();playMode=true;playIdx=0;document.getElementById('play-ov').classList.add('on');showPlayCard();}
+function showPlayCard(){
+  const m=filteredMems[playIdx];
+  document.getElementById('pc-ch').textContent=m.chapter;
+  document.getElementById('pc-ti').textContent=m.title;
+  document.getElementById('pc-me').textContent=`${m.date}  ·  ${m.place}`;
+  document.getElementById('pc-no').textContent=m.note;
+  document.getElementById('pc-dots').innerHTML=filteredMems.map((_,i)=>`<div class="pc-dot${i===playIdx?' on':''}"></div>`).join('');
+  memMarkers.forEach((mk,j)=>mk.setIcon(makeCircleIcon(CHAPTER_COLORS[memories[j].chapter]||'#D4522A',14,memories[j]===filteredMems[playIdx])));
+  leafletMap.panTo([m.lat,m.lng],{animate:true,duration:.6});
+}
+function playNext(){if(playIdx<filteredMems.length-1){playIdx++;showPlayCard();}else stopPlay();}
+function playPrev(){if(playIdx>0){playIdx--;showPlayCard();}}
+function stopPlay(){playMode=false;document.getElementById('play-ov').classList.remove('on');memMarkers.forEach((mk,j)=>mk.setIcon(makeCircleIcon(CHAPTER_COLORS[memories[j].chapter]||'#D4522A')));}
+
+function buildTimeline(){
+  const strip=document.getElementById('tstrip');strip.innerHTML='';let lastCh=null;
+  filteredMems.forEach((m,fi)=>{
+    if(m.chapter!==lastCh){const c=document.createElement('div');c.className='tc';c.style.color=CHAPTER_COLORS[m.chapter]||'#fff';c.textContent=m.chapter;strip.appendChild(c);lastCh=m.chapter;}
+    if(fi>0){const l=document.createElement('div');l.className='tline';strip.appendChild(l);}
+    const d=document.createElement('div');d.className='tdot';
+    d.innerHTML=`<div class="dtip">${m.date} · ${m.title}</div>`;
+    d.onclick=()=>openMemory(memories.indexOf(filteredMems[fi]));
+    strip.appendChild(d);
+  });
+}
+
+// ════════════════════════════════════════════
+// TAB 3 — PICKS (split panel, Airbnb style)
+// ════════════════════════════════════════════
+let picksMap=null, picksMarkers=[], activePF='all', activePickIdx=null;
+
+function initPicksMap(){
+  picksMap=L.map('picks-leaflet',{zoomControl:true,scrollWheelZoom:true}).setView([-33.878,151.207],15);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',{
+    attribution:'© OpenStreetMap © CARTO',subdomains:'abcd',maxZoom:19
+  }).addTo(picksMap);
+
+  picks.forEach((p,i)=>{
+    const col=typeColors[p.type];
+    const mk=L.marker([p.lat,p.lng],{icon:makeCircleIcon(col,13)}).addTo(picksMap);
+    mk.on('click',()=>selectPick(i,true));
+    picksMarkers.push(mk);
+  });
+
+  // Update list when map moves
+  picksMap.on('moveend zoomend',updateVisiblePicks);
+  renderPicksList();
+}
+
+function filterPicks(type,btn){
+  activePF=type;
+  document.querySelectorAll('.pf').forEach(b=>b.classList.remove('on','all','coffee','food','drinks'));
+  if(btn){btn.classList.add('on');btn.classList.add(type==='all'?'all':type);}
+  picksMarkers.forEach((mk,i)=>{
+    const vis=type==='all'||picks[i].type===type;
+    if(vis)mk.addTo(picksMap); else picksMap.removeLayer(mk);
+  });
+  closePicksPopup();
+  activePickIdx=null;
+  updateVisiblePicks();
+}
+
+function updateVisiblePicks(){
+  const bounds=picksMap.getBounds();
+  const listItems=document.querySelectorAll('.pick-list-item');
+  let count=0;
+  listItems.forEach((el,i)=>{
+    const p=picks[i];
+    const typeOk=activePF==='all'||p.type===activePF;
+    const inBounds=bounds.contains([p.lat,p.lng]);
+    const show=typeOk&&inBounds;
+    el.classList.toggle('hidden',!show);
+    if(show)count++;
+  });
+  document.getElementById('picks-count').textContent=`${count} place${count!==1?'s':''} in view`;
+}
+
+function renderPicksList(){
+  const list=document.getElementById('picks-list');list.innerHTML='';
+  picks.forEach((p,i)=>{
+    const col=typeColors[p.type];
+    const el=document.createElement('div');
+    el.className='pick-list-item';
+    el.dataset.idx=i;
+    el.innerHTML=`
+      <div class="pli-img">${p.photo?`<img src="${p.photo}" alt="${p.name}">`:`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="${col}" stroke-width="1.2" opacity="0.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>`}</div>
+      <div class="pli-body">
+        <div class="pli-name">${p.name}</div>
+        <div class="pli-sub">${p.suburb}</div>
+        <div class="pli-stars"><span style="color:${col}">${'★'.repeat(p.rating)}</span><span style="color:#ddd">${'★'.repeat(5-p.rating)}</span></div>
+        <div class="pli-note">${p.note}</div>
+      </div>
+      <div class="pli-type-dot" style="background:${col}"></div>`;
+    el.onclick=()=>selectPick(i,false);
+    list.appendChild(el);
+  });
+  updateVisiblePicks();
+}
+
+function selectPick(i,fromMap){
+  activePickIdx=i;
+  const p=picks[i];const col=typeColors[p.type];
+  // highlight list item
+  document.querySelectorAll('.pick-list-item').forEach((el,j)=>el.classList.toggle('active',j===i));
+  // scroll list item into view
+  const item=document.querySelector(`.pick-list-item[data-idx="${i}"]`);
+  if(item)item.scrollIntoView({behavior:'smooth',block:'nearest'});
+  // highlight marker
+  picksMarkers.forEach((mk,j)=>mk.setIcon(makeCircleIcon(typeColors[picks[j].type],13,j===i)));
+  // pan map to pin
+  if(!fromMap)picksMap.panTo([p.lat,p.lng],{animate:true,duration:.5});
+  // show popup
+  document.getElementById('pp-bar').style.background=col;
+  document.getElementById('pp-name').textContent=p.name;
+  document.getElementById('pp-suburb').textContent=`${p.suburb} · ${p.type}`;
+  document.getElementById('pp-stars').innerHTML=`<span style="color:${col}">${'★'.repeat(p.rating)}</span><span style="color:#ddd">${'★'.repeat(5-p.rating)}</span>`;
+  document.getElementById('pp-note').textContent=p.note;
+  document.getElementById('picks-popup').classList.add('open');
+}
+function closePicksPopup(){
+  document.getElementById('picks-popup').classList.remove('open');
+  picksMarkers.forEach((mk,j)=>mk.setIcon(makeCircleIcon(typeColors[picks[j].type],13)));
+  activePickIdx=null;
+  document.querySelectorAll('.pick-list-item').forEach(el=>el.classList.remove('active'));
+}
+
+// ════════════════════════════════════════════
+// TRIPS
+// ════════════════════════════════════════════
+function buildTrips(){
+  const inner=document.getElementById('trips-inner');inner.innerHTML='';
+  const byYear={};
+  trips.forEach(t=>{const y=t.sortKey.slice(0,4);if(!byYear[y])byYear[y]=[];byYear[y].push(t);});
+  Object.keys(byYear).sort().forEach(y=>{
+    const lbl=document.createElement('div');lbl.className='yr-lbl';lbl.textContent=y;inner.appendChild(lbl);
+    const row=document.createElement('div');row.className='trips-row';
+    byYear[y].forEach((t,idx)=>{
+      const pol=document.createElement('div');pol.className='polaroid';
+      pol.innerHTML=`
+        <div class="pol-pin" style="background:${t.color}"></div>
+        <div class="pol-img">
+          ${t.cover?`<img src="${t.cover}" alt="${t.name}">`:`<svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="${t.color}" stroke-width="1.2" opacity="0.55"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>`}
+          <div class="pol-badge" style="background:${t.color}">${t.dates}</div>
+        </div>
+        <div class="pol-name">${t.name}</div>
+        <div class="pol-reg">${t.region}</div>`;
+      pol.onclick=()=>openTrip(trips.indexOf(t));
+      row.appendChild(pol);
+    });
+    inner.appendChild(row);
+  });
+}
+function openTrip(i){
+  const t=trips[i];
+  document.getElementById('td-banner').style.background=t.color;
+  document.getElementById('td-region').textContent=t.region;document.getElementById('td-region').style.color=t.color;
+  document.getElementById('td-tname').textContent=t.name;
+  document.getElementById('td-dates').textContent=t.dates;
+  document.getElementById('td-np').textContent=t.note;
+  document.getElementById('td-gallery').innerHTML=(t.photos||[]).map(p=>
+    `<div class="td-gimg">${p?`<img src="${p}" alt="">`:`<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#aaa" stroke-width="1" opacity="0.4"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>`}</div>`
+  ).join('');
+  document.getElementById('trip-detail').classList.add('open');
+}
+function closeTripDetail(){document.getElementById('trip-detail').classList.remove('open');}
+document.getElementById('trip-detail').addEventListener('click',e=>{if(e.target===document.getElementById('trip-detail'))closeTripDetail();});
+
+// ════════════════════════════════════════════
+// LETTERS
+// ════════════════════════════════════════════
+function buildLetters(){
+  const grid=document.getElementById('letters-grid');grid.innerHTML='';
+  letters.forEach(l=>{
+    const wrap=document.createElement('div');wrap.className='flip-wrap';
+    wrap.innerHTML=`
+      <div class="flip-inner">
+        <div class="flip-front">
+          <div class="ff-accent" style="background:${l.color}"></div>
+          <div class="ff-av" style="background:${l.color}1a;border:2px solid ${l.color}44">
+            ${l.photo?`<img src="${l.photo}" alt="${l.name}">`:`<span style="color:${l.color}">${l.initials}</span>`}
+          </div>
+          <div class="ff-name">${l.name}</div>
+          <div class="ff-rel">${l.relation}</div>
+          <div class="ff-hint">tap to read →</div>
+        </div>
+        <div class="flip-back">
+          <div class="fb-from">From ${l.name}</div>
+          <div class="fb-note">${l.note.replace(/\n/g,'<br>')}</div>
+          ${l.sig?`<div class="fb-sig">${l.sig}</div>`:''}
+        </div>
+      </div>`;
+    wrap.onclick=()=>wrap.classList.toggle('flipped');
+    grid.appendChild(wrap);
+  });
+}
+
+// ════════════════════════════════════════════
+// MOBILE
+// ════════════════════════════════════════════
+let mobActiveYear='all';
+function buildMobile(year){
+  const list=document.getElementById('mob-list');list.innerHTML='';
+  const filtered=memories.filter(m=>year==='all'||m.year===year);
+  let lastCh=null;
+  filtered.forEach(m=>{
+    if(m.chapter!==lastCh){
+      const h=document.createElement('div');h.className='mb-ch';const col=CHAPTER_COLORS[m.chapter]||'#D4522A';
+      h.innerHTML=`<div class="mb-chdot" style="background:${col}"></div><div class="mb-chlabel" style="color:${col}">${m.chapter}</div>`;
+      list.appendChild(h);lastCh=m.chapter;
+    }
+    const c=document.createElement('div');c.className='mb-card';const col=CHAPTER_COLORS[m.chapter]||'#D4522A';
+    c.innerHTML=`<div class="mb-thumb" style="border-left:3px solid ${col}">${m.photo?`<img src="${m.photo}">`:`<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#aaa" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>`}</div><div class="mb-bdy"><div class="mb-date" style="color:${col}">${m.date}</div><div class="mb-title">${m.title}</div><div class="mb-place">${m.place}</div><div class="mb-note">${m.note}</div></div>`;
+    c.onclick=()=>{const was=c.classList.contains('open');document.querySelectorAll('.mb-card.open').forEach(x=>x.classList.remove('open'));if(!was)c.classList.add('open');};
+    list.appendChild(c);
+  });
+}
+function mobFilterYear(y,btn){
+  mobActiveYear=y;
+  document.querySelectorAll('.myf').forEach(b=>b.classList.remove('on'));
+  if(btn)btn.classList.add('on');
+  buildMobile(y);
+}
+
+// ════════════════════════════════════════════
+// TABS
+// ════════════════════════════════════════════
+const tabClass={map:'tab-map',trips:'tab-trips',picks:'tab-picks',letters:'tab-letters'};
+let picksInited=false;
+function showTab(id,btn){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  document.getElementById('p-'+id).classList.add('on');
+  if(btn)btn.classList.add('on');
+  document.body.className=tabClass[id]||'tab-map';
+  if(id==='picks'&&!picksInited){picksInited=true;setTimeout(()=>{picksMap.invalidateSize();updateVisiblePicks();},100);}
+  if(id==='map'&&leafletMap)setTimeout(()=>leafletMap.invalidateSize(),100);
+}
+
+// ════════════════════════════════════════════
+// KEYBOARD
+// ════════════════════════════════════════════
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){closeCard();if(playMode)stopPlay();closeTripDetail();closePicksPopup();}
+  if(playMode){if(e.key==='ArrowRight')playNext();if(e.key==='ArrowLeft')playPrev();}
+  else{if(e.key==='ArrowRight')navCard(1);if(e.key==='ArrowLeft')navCard(-1);}
+});
+
+// ════════════════════════════════════════════
+// BOOT
+// ════════════════════════════════════════════
+window.addEventListener('load',()=>{
+  setTimeout(()=>{const l=document.getElementById('loading');l.style.opacity='0';setTimeout(()=>l.remove(),700);},2200);
+  initLeafletMap();
+  initPicksMap();
+  buildTrips();
+  buildLetters();
+  buildMobile('all');
+});
+</script>
+</body>
+</html>
