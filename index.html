@@ -125,56 +125,66 @@ body.tab-letters .tab.on{background:var(--mustard);color:var(--ink)}
 /* play overlay */
 #play-ov{display:none;position:absolute;inset:0;top:44px;bottom:50px;z-index:40;pointer-events:none}
 #play-ov.on{display:block}
-#play-card{position:absolute;bottom:1.25rem;left:50%;transform:translateX(-50%);width:355px;background:rgba(44,56,48,.92);backdrop-filter:blur(12px);border:1.5px solid rgba(232,160,48,.25);border-radius:6px;padding:1.1rem 1.25rem;pointer-events:all;color:var(--cream)}
-.pc-ch{font-size:.57rem;letter-spacing:.12em;text-transform:uppercase;color:var(--mustard);margin-bottom:.25rem;font-weight:500}
-.pc-ti{font-family:'Playfair Display',serif;font-size:1.1rem;font-style:italic;color:var(--cream);margin-bottom:.18rem}
-.pc-me{font-size:.63rem;color:rgba(250,245,236,.4);margin-bottom:.48rem}
-.pc-no{font-family:'Caveat',cursive;font-size:.98rem;line-height:1.6;color:rgba(250,245,236,.82);margin-bottom:.8rem}
+#play-card{position:absolute;bottom:1.25rem;left:50%;transform:translateX(-50%);width:380px;background:rgba(14,22,20,.96);backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,.1);border-radius:10px;overflow:hidden;pointer-events:all;color:var(--cream);box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.pc-photo{width:100%;height:180px;overflow:hidden;position:relative;background:#1a2420;flex-shrink:0}
+.pc-photo img{width:100%;height:100%;object-fit:cover;display:block}
+.pc-photo-placeholder{width:100%;height:100%;display:flex;align-items:center;justify-content:center}
+.pc-body{padding:1rem 1.25rem 1.1rem}
+.pc-ch{font-size:.55rem;letter-spacing:.12em;text-transform:uppercase;color:var(--mustard);margin-bottom:.2rem;font-weight:500}
+.pc-ti{font-family:'Playfair Display',serif;font-size:1.05rem;font-style:italic;color:var(--cream);margin-bottom:.15rem}
+.pc-me{font-size:.6rem;color:rgba(250,245,236,.35);margin-bottom:.4rem}
+.pc-no{font-family:'Caveat',cursive;font-size:.95rem;line-height:1.6;color:rgba(250,245,236,.78);margin-bottom:.75rem}
 .pc-btns{display:flex;align-items:center;gap:7px}
-.pc-btn{padding:5px 13px;border:1.5px solid rgba(232,160,48,.35);border-radius:3px;background:transparent;color:var(--mustard);font-size:.63rem;letter-spacing:.07em;text-transform:uppercase;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:500;transition:all .15s}
+.pc-btn{padding:5px 13px;border:1.5px solid rgba(232,160,48,.3);border-radius:4px;background:transparent;color:var(--mustard);font-size:.62rem;letter-spacing:.07em;text-transform:uppercase;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:500;transition:all .15s}
 .pc-btn:hover{background:var(--mustard);color:var(--ink)}
-.pc-stop{margin-left:auto;background:none;border:none;color:rgba(250,245,236,.3);font-size:.6rem;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;font-family:'DM Sans',sans-serif}
-.pc-stop:hover{color:rgba(250,245,236,.75)}
-.pc-dots{display:flex;gap:4px;margin-top:.7rem;flex-wrap:wrap}
-.pc-dot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.12);transition:background .2s;flex-shrink:0}
+.pc-stop{margin-left:auto;background:none;border:none;color:rgba(250,245,236,.25);font-size:.58rem;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;font-family:'DM Sans',sans-serif}
+.pc-stop:hover{color:rgba(250,245,236,.65)}
+.pc-dots{display:flex;gap:4px;margin-top:.65rem;flex-wrap:wrap}
+.pc-dot{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.1);transition:background .2s;flex-shrink:0}
 .pc-dot.on{background:var(--mustard)}
 
 /* ══════════════════════════════════
-   TAB 2 — TRIPS  (dusty rose + cream)
+   TAB 2 — TRIPS
 ══════════════════════════════════ */
-#p-trips{background:var(--t2-bg);overflow:hidden}
-#trips-scroll{height:100%;overflow-y:auto;padding:1.75rem 1.75rem 4rem;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.15) transparent}
-.yr-lbl{font-size:.6rem;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.45);margin-bottom:1rem;padding-bottom:.35rem;border-bottom:1px solid rgba(255,255,255,.12);font-weight:500}
-.trips-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(182px,1fr));gap:1.25rem;margin-bottom:2.25rem}
-.polaroid{background:#FFFCF5;cursor:pointer;position:relative;box-shadow:2px 4px 18px rgba(0,0,0,.22),0 1px 4px rgba(0,0,0,.1);transition:transform .25s,box-shadow .25s;padding:10px 10px 36px}
-.polaroid:nth-child(1){transform:rotate(-2.1deg)}
-.polaroid:nth-child(2){transform:rotate(1.4deg)}
-.polaroid:nth-child(3){transform:rotate(-.9deg)}
-.polaroid:nth-child(4){transform:rotate(1.7deg)}
-.polaroid:nth-child(5){transform:rotate(-.5deg)}
-.polaroid:hover{transform:rotate(0) scale(1.05) !important;box-shadow:4px 10px 30px rgba(0,0,0,.28);z-index:10}
-.pol-img{width:100%;aspect-ratio:1;background:#e8dfc8;display:flex;align-items:center;justify-content:center;overflow:hidden;margin-bottom:8px;position:relative}
-.pol-img img{width:100%;height:100%;object-fit:cover}
-.pol-badge{position:absolute;top:6px;left:6px;font-size:.55rem;letter-spacing:.07em;text-transform:uppercase;font-weight:500;padding:2px 7px;border-radius:20px;color:#fff}
-.pol-pin{position:absolute;top:-8px;left:50%;transform:translateX(-50%);width:13px;height:13px;border-radius:50%;box-shadow:0 1px 5px rgba(0,0,0,.35);border:2px solid rgba(255,255,255,.65)}
-.pol-name{font-family:'Caveat',cursive;font-size:1.1rem;color:var(--ink);text-align:center;line-height:1.2;font-weight:600}
-.pol-reg{font-family:'Caveat',cursive;font-size:.85rem;color:#9a8f82;text-align:center}
-#trip-detail{display:none;position:fixed;inset:0;z-index:400;background:rgba(0,0,0,.65);align-items:center;justify-content:center;padding:1.5rem}
-#trip-detail.open{display:flex}
-.td-inner{background:var(--card);border-radius:6px;max-width:700px;width:100%;max-height:88vh;overflow-y:auto;position:relative}
-.td-close{position:absolute;top:.85rem;right:.95rem;background:none;border:none;font-size:1.1rem;color:var(--muted);cursor:pointer;line-height:1}
-.td-close:hover{color:var(--ink)}
-.td-banner{height:6px;border-radius:6px 6px 0 0}
-.td-head{padding:1.5rem 1.75rem .9rem}
-.td-region{font-size:.58rem;letter-spacing:.12em;text-transform:uppercase;font-weight:500;margin-bottom:.3rem}
-.td-tname{font-family:'Playfair Display',serif;font-size:1.65rem;font-style:italic;color:var(--ink);line-height:1.15;margin-bottom:.25rem}
-.td-dates{font-size:.74rem;color:var(--muted)}
-.td-gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:5px;padding:0 1.75rem}
-.td-gimg{aspect-ratio:4/3;background:#e8dfc8;border-radius:2px;overflow:hidden;display:flex;align-items:center;justify-content:center}
-.td-gimg img{width:100%;height:100%;object-fit:cover;display:block}
-.td-notes{padding:1.2rem 1.75rem 2rem}
-.td-nlbl{font-size:.57rem;letter-spacing:.1em;text-transform:uppercase;color:var(--teal);font-weight:500;margin-bottom:.45rem}
-.td-np{font-family:'Caveat',cursive;font-size:1.1rem;line-height:1.72;color:#4a5a58}
+#p-trips{background:#1a1f1e;overflow:hidden}
+#trips-scroll{height:100%;overflow-y:auto;padding:1.5rem 1.5rem 4rem;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.12) transparent}
+.yr-lbl{font-size:.58rem;letter-spacing:.15em;text-transform:uppercase;color:rgba(255,255,255,.3);margin-bottom:.85rem;padding-bottom:.35rem;border-bottom:1px solid rgba(255,255,255,.08);font-weight:500}
+.trips-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px;margin-bottom:2rem}
+
+.trip-card{position:relative;height:320px;border-radius:10px;overflow:hidden;cursor:pointer;transition:transform .28s cubic-bezier(.22,.68,0,1.2),box-shadow .28s;background:#1e2623;flex-shrink:0}
+.trip-card:hover{transform:translateY(-5px);box-shadow:0 20px 50px rgba(0,0,0,.55)}
+.trip-card-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;transition:transform .5s ease}
+.trip-card:hover .trip-card-img{transform:scale(1.04)}
+.trip-card-placeholder{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#1e2a27 0%,#2d3f3a 100%)}
+.trip-card-overlay{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:flex-end;padding:1.1rem 1.2rem 1.25rem}
+.trip-card-overlay::before{content:'';position:absolute;inset:0;background:linear-gradient(to top,rgba(10,18,16,.92) 0%,rgba(10,18,16,.55) 45%,transparent 100%);border-radius:10px;z-index:0}
+.trip-card-overlay::after{content:'';position:absolute;bottom:0;left:0;right:0;height:60%;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);-webkit-mask-image:linear-gradient(to top,black 0%,black 55%,transparent 100%);mask-image:linear-gradient(to top,black 0%,black 55%,transparent 100%);z-index:0;border-radius:10px}
+.trip-card-content{position:relative;z-index:1}
+.trip-card-badge{display:inline-block;font-size:.54rem;letter-spacing:.1em;text-transform:uppercase;font-weight:600;padding:2px 8px;border-radius:20px;color:#fff;margin-bottom:.5rem;opacity:.85}
+.trip-card-name{font-family:'Playfair Display',serif;font-size:1.22rem;font-style:italic;color:#fff;line-height:1.2;margin-bottom:.2rem;text-shadow:0 1px 6px rgba(0,0,0,.4)}
+.trip-card-region{font-size:.6rem;letter-spacing:.08em;color:rgba(255,255,255,.55);text-transform:uppercase;font-weight:500}
+#trip-detail{display:none;position:fixed;inset:0;z-index:400;background:rgba(0,0,0,.75);align-items:center;justify-content:center;padding:1.5rem;backdrop-filter:blur(4px)}
+#trip-detail.open{display:flex;animation:fadein .25s ease}
+@keyframes fadein{from{opacity:0}to{opacity:1}}
+.td-inner{background:#0e1614;border-radius:12px;max-width:720px;width:100%;max-height:90vh;overflow-y:auto;position:relative;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.1) transparent}
+.td-close{position:absolute;top:1rem;right:1rem;z-index:10;width:32px;height:32px;border-radius:50%;background:rgba(0,0,0,.45);border:1.5px solid rgba(255,255,255,.15);color:rgba(255,255,255,.7);font-size:.8rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.td-close:hover{background:rgba(0,0,0,.7);color:#fff}
+.td-hero{width:100%;height:340px;position:relative;border-radius:12px 12px 0 0;overflow:hidden;flex-shrink:0}
+.td-hero img{width:100%;height:100%;object-fit:cover;display:block}
+.td-hero-placeholder{width:100%;height:100%;background:linear-gradient(135deg,#1a2420 0%,#2a3f38 100%);display:flex;align-items:center;justify-content:center}
+.td-hero-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(14,22,20,1) 0%,rgba(14,22,20,.3) 55%,transparent 100%)}
+.td-hero-text{position:absolute;bottom:1.5rem;left:1.75rem;right:1.75rem}
+.td-region{font-size:.57rem;letter-spacing:.12em;text-transform:uppercase;font-weight:500;margin-bottom:.35rem}
+.td-tname{font-family:'Playfair Display',serif;font-size:2rem;font-style:italic;color:#fff;line-height:1.15;margin-bottom:.22rem;text-shadow:0 2px 12px rgba(0,0,0,.5)}
+.td-dates{font-size:.72rem;color:rgba(255,255,255,.45)}
+.td-gallery{display:flex;gap:7px;padding:1.25rem 1.75rem .9rem;overflow-x:auto;scrollbar-width:none}
+.td-gallery::-webkit-scrollbar{display:none}
+.td-gimg{flex-shrink:0;width:180px;height:130px;border-radius:6px;overflow:hidden;background:#1a2420}
+.td-gimg img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .35s}
+.td-gimg:hover img{transform:scale(1.05)}
+.td-notes{padding:.6rem 1.75rem 2rem}
+.td-nlbl{font-size:.55rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.3);font-weight:500;margin-bottom:.5rem}
+.td-np{font-family:'Caveat',cursive;font-size:1.15rem;line-height:1.72;color:rgba(255,255,255,.75)}
 
 /* ══════════════════════════════════
    TAB 3 — OUR PICKS  (cream + pink, Airbnb-style split)
@@ -332,12 +342,17 @@ body.tab-letters .tab.on{background:var(--mustard);color:var(--ink)}
   </div>
   <div id="play-ov">
     <div id="play-card">
-      <div class="pc-ch" id="pc-ch"></div>
-      <div class="pc-ti" id="pc-ti"></div>
-      <div class="pc-me" id="pc-me"></div>
-      <div class="pc-no" id="pc-no"></div>
-      <div class="pc-btns"><button class="pc-btn" onclick="playPrev()">← Back</button><button class="pc-btn" onclick="playNext()">Next →</button><button class="pc-stop" onclick="stopPlay()">✕ stop</button></div>
-      <div class="pc-dots" id="pc-dots"></div>
+      <div class="pc-photo" id="pc-photo">
+        <div class="pc-photo-placeholder" id="pc-photo-placeholder"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.12)" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg></div>
+      </div>
+      <div class="pc-body">
+        <div class="pc-ch" id="pc-ch"></div>
+        <div class="pc-ti" id="pc-ti"></div>
+        <div class="pc-me" id="pc-me"></div>
+        <div class="pc-no" id="pc-no"></div>
+        <div class="pc-btns"><button class="pc-btn" onclick="playPrev()">← Back</button><button class="pc-btn" onclick="playNext()">Next →</button><button class="pc-stop" onclick="stopPlay()">✕ stop</button></div>
+        <div class="pc-dots" id="pc-dots"></div>
+      </div>
     </div>
   </div>
   <div id="tstrip"></div>
@@ -350,11 +365,14 @@ body.tab-letters .tab.on{background:var(--mustard);color:var(--ink)}
 <div id="trip-detail">
   <div class="td-inner">
     <button class="td-close" onclick="closeTripDetail()">✕</button>
-    <div class="td-banner" id="td-banner"></div>
-    <div class="td-head">
-      <div class="td-region" id="td-region"></div>
-      <div class="td-tname" id="td-tname"></div>
-      <div class="td-dates" id="td-dates"></div>
+    <div class="td-hero" id="td-hero">
+      <div class="td-hero-placeholder" id="td-hero-placeholder"></div>
+      <div class="td-hero-overlay"></div>
+      <div class="td-hero-text">
+        <div class="td-region" id="td-region"></div>
+        <div class="td-tname" id="td-tname"></div>
+        <div class="td-dates" id="td-dates"></div>
+      </div>
     </div>
     <div class="td-gallery" id="td-gallery"></div>
     <div class="td-notes"><div class="td-nlbl">What we remember</div><p class="td-np" id="td-np"></p></div>
@@ -465,7 +483,7 @@ const trips=[
   {name:"Berry",region:"NSW South Coast",dates:"Jun 2024",sortKey:"2024-06a",color:"#E8A030",
    cover:"",photos:["photos/trips/berry-1.jpg","photos/trips/berry-2.jpg","photos/trips/berry-3.jpg"],
    note:"The main street in a quiet weekend. That bakery. The drive down."},
-  {name:"Gerringong",region:"NSW South Coast",dates:"Jun 2024",sortKey:"2024-06b",color:"#D4607A",
+  {name:"Gerringong",region:"NSW South Coast",dates:"2025",sortKey:"2025-07",color:"#D4607A",
    cover:"",photos:["photos/trips/gerringong-1.jpg","photos/trips/gerringong-2.jpg"],
    note:"Add your note here."},
   {name:"Bateman Bay",region:"NSW South Coast",dates:"Sep 2024",sortKey:"2024-09a",color:"#2D7A6E",
@@ -601,6 +619,19 @@ function showPlayCard(){
   document.getElementById('pc-me').textContent=`${m.date}  ·  ${m.place}`;
   document.getElementById('pc-no').textContent=m.note;
   document.getElementById('pc-dots').innerHTML=filteredMems.map((_,i)=>`<div class="pc-dot${i===playIdx?' on':''}"></div>`).join('');
+  // photo
+  const ph=document.getElementById('pc-photo');
+  ph.querySelectorAll('img').forEach(el=>el.remove());
+  const placeholder=document.getElementById('pc-photo-placeholder');
+  if(m.photo){
+    const img=document.createElement('img');img.src=m.photo;img.alt=m.title;
+    ph.insertBefore(img,ph.firstChild);
+    placeholder.style.display='none';
+    document.getElementById('pc-photo').style.display='block';
+  } else {
+    placeholder.style.display='flex';
+    document.getElementById('pc-photo').style.display=m.photo===undefined?'none':'block';
+  }
   memMarkers.forEach((mk,j)=>mk.setIcon(makeCircleIcon(CHAPTER_COLORS[memories[j].chapter]||'#D4522A',14,memories[j]===filteredMems[playIdx])));
   leafletMap.panTo([m.lat,m.lng],{animate:true,duration:.6});
 }
@@ -730,31 +761,48 @@ function buildTrips(){
   Object.keys(byYear).sort().forEach(y=>{
     const lbl=document.createElement('div');lbl.className='yr-lbl';lbl.textContent=y;inner.appendChild(lbl);
     const row=document.createElement('div');row.className='trips-row';
-    byYear[y].forEach((t,idx)=>{
-      const pol=document.createElement('div');pol.className='polaroid';
-      pol.innerHTML=`
-        <div class="pol-pin" style="background:${t.color}"></div>
-        <div class="pol-img">
-          ${t.cover?`<img src="${t.cover}" alt="${t.name}">`:`<svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="${t.color}" stroke-width="1.2" opacity="0.55"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>`}
-          <div class="pol-badge" style="background:${t.color}">${t.dates}</div>
-        </div>
-        <div class="pol-name">${t.name}</div>
-        <div class="pol-reg">${t.region}</div>`;
-      pol.onclick=()=>openTrip(trips.indexOf(t));
-      row.appendChild(pol);
+    byYear[y].forEach(t=>{
+      const card=document.createElement('div');card.className='trip-card';
+      card.innerHTML=`
+        ${t.cover
+          ?`<img class="trip-card-img" src="${t.cover}" alt="${t.name}" loading="lazy">`
+          :`<div class="trip-card-placeholder"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.15)" stroke-width="1"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></div>`}
+        <div class="trip-card-overlay">
+          <div class="trip-card-content">
+            <div class="trip-card-badge" style="background:${t.color}20;border:1px solid ${t.color}50;color:${t.color}">${t.dates}</div>
+            <div class="trip-card-name">${t.name}</div>
+            <div class="trip-card-region">${t.region}</div>
+          </div>
+        </div>`;
+      card.onclick=()=>openTrip(trips.indexOf(t));
+      row.appendChild(card);
     });
     inner.appendChild(row);
   });
 }
 function openTrip(i){
   const t=trips[i];
-  document.getElementById('td-banner').style.background=t.color;
-  document.getElementById('td-region').textContent=t.region;document.getElementById('td-region').style.color=t.color;
+  const hero=document.getElementById('td-hero');
+  const ph=document.getElementById('td-hero-placeholder');
+  // remove old hero img if present
+  hero.querySelectorAll('img').forEach(el=>el.remove());
+  if(t.cover){
+    const img=document.createElement('img');img.src=t.cover;img.alt=t.name;
+    hero.insertBefore(img,hero.firstChild);
+    ph.style.display='none';
+  } else {
+    ph.style.display='flex';
+  }
+  const col=t.color;
+  document.getElementById('td-region').textContent=t.region;
+  document.getElementById('td-region').style.color=col;
   document.getElementById('td-tname').textContent=t.name;
   document.getElementById('td-dates').textContent=t.dates;
   document.getElementById('td-np').textContent=t.note;
-  document.getElementById('td-gallery').innerHTML=(t.photos||[]).map(p=>
-    `<div class="td-gimg">${p?`<img src="${p}" alt="">`:`<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#aaa" stroke-width="1" opacity="0.4"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>`}</div>`
+  // gallery: skip the cover (first photo) to avoid duplication
+  const galleryPhotos=(t.photos||[]).slice(1);
+  document.getElementById('td-gallery').innerHTML=galleryPhotos.map(p=>
+    `<div class="td-gimg">${p?`<img src="${p}" alt="" loading="lazy">`:`<div style="width:100%;height:100%;background:#1a2420"></div>`}</div>`
   ).join('');
   document.getElementById('trip-detail').classList.add('open');
 }
